@@ -2,7 +2,7 @@
   description = "Flake for TPU ReLU kernel";
 
   inputs = {
-    kernel-builder.url = "github:huggingface/kernel-builder";
+    kernel-builder.url = "github:huggingface/kernels/tpu";
   };
 
   outputs =
