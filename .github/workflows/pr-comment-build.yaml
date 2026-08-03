@@ -37,21 +37,21 @@ jobs:
           set -eu
           if [ "${#COMMENT_BODY}" -gt 1024 ]; then
             echo "Ignoring oversized comment payload."
-            exit 0
+            exit 1
           fi
           case "$COMMENT_BODY" in
             /kernel-bot*) ;;
             *)
               echo "Ignoring non /kernel-bot comment."
-              exit 0
+              exit 1
               ;;
           esac
           if ! printf '%s' "$COMMENT_BODY" | grep -Eq '^/kernel-bot[][ A-Za-z0-9_,./-]*$'; then
             echo "Ignoring /kernel-bot comment with unsupported characters."
-            exit 0
+            exit 1
           fi
           if [[ "$COMMENT_AUTHOR_ASSOCIATION" != "MEMBER" && "$COMMENT_AUTHOR_ASSOCIATION" != "OWNER" && "$COMMENT_AUTHOR_ASSOCIATION" != "COLLABORATOR" ]]; then
             echo "Unauthorized: Only members, owners, and collaborators can use /kernel-bot."
-            exit 0
+            exit 1
           fi
           python3 .github/scripts/pr_comment_kernel_bot.py
