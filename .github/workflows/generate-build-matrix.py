@@ -12,12 +12,17 @@ with one entry per (backend, arch) combination. Each entry includes max_jobs
 and cores, falling back to DEFAULT_MAX_JOBS and DEFAULT_CORES respectively,
 with per-kernel/backend overrides read from build-concurrency.json at the
 repo root.
+
+The optional BACKENDS_FILTER environment variable (comma-separated) restricts
+the matrix to those backends; empty or unset builds every backend nix exposes.
 """
 
 import json
 import os
 import sys
 from pathlib import Path
+
+VALID_BACKENDS = frozenset({"cuda", "cpu", "rocm", "metal", "xpu"})
 
 ARCHES = [
     ("x86_64-linux", "aws-highmemory-32-plus-nix"),
@@ -36,6 +41,25 @@ def load_concurrency_overrides() -> dict:
     return {}
 
 
+def validate_backend(backend) -> str:
+    if backend not in VALID_BACKENDS:
+        print(
+            f"Invalid backend name: {backend!r} "
+            f"(expected one of {sorted(VALID_BACKENDS)})",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return backend
+
+
+def validate_int(value, name: str) -> int:
+    # bool is a subclass of int, but we don't want to accept it either.
+    if isinstance(value, bool) or not isinstance(value, int):
+        print(f"Invalid {name} value: {value!r} (expected integer)", file=sys.stderr)
+        sys.exit(1)
+    return value
+
+
 def main():
     if len(sys.argv) != 3:
         print(
@@ -49,6 +73,10 @@ def main():
         print("KERNEL environment variable is not set or empty", file=sys.stderr)
         sys.exit(1)
 
+    backends_filter = {
+        b.strip() for b in os.environ.get("BACKENDS_FILTER", "").split(",") if b.strip()
+    }
+
     backends_by_arch = {
         "x86_64-linux": json.loads(sys.argv[1]),
         "aarch64-linux": json.loads(sys.argv[2]),
@@ -58,16 +86,21 @@ def main():
 
     include = [
         {
-            "backend": backend,
+            "backend": validate_backend(backend),
             "arch": arch,
             "runner": runner,
-            "max_jobs": kernel_overrides.get(backend, {}).get(
-                "max-jobs", DEFAULT_MAX_JOBS
+            "max_jobs": validate_int(
+                kernel_overrides.get(backend, {}).get("max-jobs", DEFAULT_MAX_JOBS),
+                "max-jobs",
             ),
-            "cores": kernel_overrides.get(backend, {}).get("cores", DEFAULT_CORES),
+            "cores": validate_int(
+                kernel_overrides.get(backend, {}).get("cores", DEFAULT_CORES),
+                "cores",
+            ),
         }
         for arch, runner in ARCHES
         for backend in backends_by_arch[arch]
+        if not backends_filter or backend in backends_filter
     ]
 
     print(json.dumps({"include": include}))
