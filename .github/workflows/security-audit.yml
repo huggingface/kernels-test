@@ -37,8 +37,10 @@ jobs:
     steps:
       # Guard against injection via the pr_number input.
       - name: Validate PR number
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
         run: |
-          case "${{ inputs.pr_number }}" in
+          case "${PR_NUMBER}" in
             ''|*[!0-9]*)
               echo "Invalid pr_number input: must be numeric"
               exit 1
