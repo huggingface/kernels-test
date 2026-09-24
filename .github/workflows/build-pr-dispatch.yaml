@@ -7,13 +7,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-permissions:
-  actions: write
-  statuses: write
+
+permissions: {}
 
 jobs:
   # Resolve the kernel from the PR title and fan out to per-platform build workflows.
   dispatch:
+    permissions:
+      actions: write
+      contents: read
+      statuses: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
