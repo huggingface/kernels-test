@@ -58,9 +58,7 @@ on:
         type: string
         default: ""
 
-permissions:
-  contents: read
-  statuses: write
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -69,6 +67,8 @@ concurrency:
 jobs:
   # Post a running commit status so the PR shows the build is in progress.
   set-running-status:
+    permissions:
+      statuses: write
     if: inputs.head_sha != ''
     runs-on: ubuntu-latest
     steps:
@@ -88,6 +88,8 @@ jobs:
 
   # Build the kernel for each CUDA/XPU variant; release mode uploads to the Hub.
   build-kernel:
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -389,6 +391,8 @@ jobs:
 
   # Report the final build outcome as a commit status on the PR head SHA.
   report-status:
+    permissions:
+      statuses: write
     if: always() && inputs.head_sha != ''
     needs: [build-kernel]
     runs-on: ubuntu-latest

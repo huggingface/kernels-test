@@ -37,8 +37,10 @@ jobs:
     steps:
       # Guard against injection via the pr_number input.
       - name: Validate PR number
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
         run: |
-          case "${{ inputs.pr_number }}" in
+          case "${PR_NUMBER}" in
             ''|*[!0-9]*)
               echo "Invalid pr_number input: must be numeric"
               exit 1
@@ -52,6 +54,7 @@ jobs:
         with:
           ref: refs/pull/${{ inputs.pr_number }}/head
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -220,8 +223,8 @@ jobs:
           } | claude -p \
                 --model claude-opus-4-8 \
                 --permission-mode plan \
-                --allowedTools "Read,Grep,Glob,LS" \
-                --disallowedTools "Bash,BashOutput,Edit,Write,MultiEdit,NotebookEdit,WebFetch,WebSearch,Task,KillShell" \
+                --allowedTools "Read(./**),Grep,Glob,LS" \
+                --disallowedTools "Read(//proc/**),Read(//sys/**),Read(//etc/**),Read(//home/**),Read(//root/**),Read(//tmp/**),Read(./.git/**),Grep(//proc/**),Glob(//proc/**),LS(//proc/**),Bash,BashOutput,Edit,Write,MultiEdit,NotebookEdit,WebFetch,WebSearch,Task,KillShell" \
                 --max-turns 40 \
               > /tmp/audit_result.txt
 
@@ -246,6 +249,11 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         shell: bash
         run: |
+          # Treat LLM output as untrusted: refuse to publish anything resembling a secret.
+          if grep -qiE '(sk-ant-[A-Za-z0-9_-]+|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|hf_[A-Za-z0-9]{20,}|x-access-token|authorization:[[:space:]]*(basic|bearer)|ANTHROPIC_API_KEY=|GITHUB_TOKEN=|ACTIONS_RUNTIME_TOKEN|ACTIONS_ID_TOKEN_REQUEST_TOKEN)' /tmp/audit_result.txt; then
+            echo "::error::Audit output contains a potential secret; refusing to post PR comment."
+            exit 1
+          fi
           {
             if [ "$HAS_FINDINGS" = "true" ]; then
               printf '## 🔒 Security Audit — findings detected\n\n'
