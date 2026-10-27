@@ -554,7 +554,7 @@ def main():
         target_branch = requested_branch or f"pr-{issue_number}"
         dispatch_pr_number = str(issue_number)
         dispatch_upload = False
-        dispatch_repo_prefix = "kernels-community"
+        dispatch_repo_prefix = "kernels-test"
     elif command == "build-and-stage":
         target_branch = requested_branch or f"pr-{issue_number}"
         dispatch_pr_number = str(issue_number)
@@ -564,12 +564,12 @@ def main():
         target_branch = requested_branch or ""
         dispatch_pr_number = ""
         dispatch_upload = True
-        dispatch_repo_prefix = "kernels-community"
+        dispatch_repo_prefix = "kernels-test"
     else:  # merge-and-upload
         target_branch = requested_branch or ""
         dispatch_pr_number = ""
         dispatch_upload = True
-        dispatch_repo_prefix = "kernels-community"
+        dispatch_repo_prefix = "kernels-test"
 
     mode_text = {
         "build": "build only",
