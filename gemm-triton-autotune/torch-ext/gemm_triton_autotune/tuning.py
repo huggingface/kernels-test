@@ -50,7 +50,7 @@ def config_file_name(N: int, K: int) -> str:
     return f"N={N},K={K},device_name={device_name()}.json"
 
 
-@functools.lru_cache
+@functools.cache
 def _load_tuned_configs(N: int, K: int) -> Optional[Dict[int, Dict[str, int]]]:
     path = _CONFIGS_DIR / config_file_name(N, K)
     if path.exists():
