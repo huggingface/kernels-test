@@ -233,7 +233,7 @@ def dispatch_release(
     repo: str,
     ref: str = "main",
     mode: str = "release",
-    repo_prefix: str = "kernels-community",
+    repo_prefix: str = "kernels-test",
     dispatch_key_prefix: str = "",
     dry_run: bool = False,
     skip_build: bool = False,
@@ -252,7 +252,7 @@ def dispatch_release(
         repo: GitHub repository in "owner/repo" format.
         ref: Git ref to dispatch against (default "main").
         mode: Build mode - "pr" for CI builds, "release" for full builds.
-        repo_prefix: Hub org prefix for uploads (default "kernels-community").
+        repo_prefix: Hub org prefix for uploads (default "kernels-test").
         dispatch_key_prefix: Optional prefix for dispatch keys (e.g. "pr42-").
         dry_run: Print what would be dispatched without actually dispatching.
         skip_build: Skip build and upload steps.
@@ -456,8 +456,8 @@ def main() -> int:
         help="Print the dispatch payloads without actually dispatching",
     )
     parser.add_argument(
-        "--repo-prefix", default="kernels-community",
-        help="Hub org prefix for uploads (default: kernels-community)",
+        "--repo-prefix", default="kernels-test",
+        help="Hub org prefix for uploads (default: kernels-test)",
     )
     parser.add_argument(
         "--security", action="store_true",
